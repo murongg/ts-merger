@@ -1,4 +1,4 @@
-import type { ClassDeclaration, EnumDeclaration, FunctionDeclaration, SourceFile, Type, VariableDeclaration } from 'ts-morph'
+import { type ClassDeclaration, type EnumDeclaration, type FunctionDeclaration, type InterfaceDeclaration, type SourceFile, type Type, type TypeAliasDeclaration, type VariableDeclaration } from 'ts-morph'
 
 export function getType(type: Type) {
   if (type.isLiteral())
@@ -33,6 +33,9 @@ export function insertFunctionDeclaration(index: number, declarartion: FunctionD
         name: s.getName(),
         type: getType(s.getType()),
         initializer: s.getInitializer()?.getText(),
+        scope: s.getScope(),
+        hasOverrideKeyword: s.hasOverrideKeyword(),
+        isReadonly: s.isReadonly(),
       }
     }),
     returnType: getType(d.getReturnType()),
@@ -92,4 +95,72 @@ export function insertClassDeclaration(index: number, declarartion: ClassDeclara
       statements: s.getStatements().map(s => s.getText()),
     })),
   })
+}
+
+export function insertInterfaceDeclaration(index: number, declarartion: InterfaceDeclaration, source: SourceFile) {
+  const d = declarartion as InterfaceDeclaration
+  source.insertInterface(index, {
+    name: d.getName(),
+    extends: d.getExtends().map(s => s.getText()),
+    indexSignatures: d.getIndexSignatures().map(s => ({
+      keyName: s.getKeyName(),
+      keyType: getType(s.getKeyType()),
+      returnType: getType(s.getReturnType()),
+    })),
+    callSignatures: d.getCallSignatures().map(s => ({
+      parameters: s.getParameters().map((s) => {
+        return {
+          name: s.getName(),
+          type: getType(s.getType()),
+          initializer: s.getInitializer()?.getText(),
+        }
+      }),
+      returnType: getType(s.getReturnType()),
+    })),
+    methods: d.getMethods().map(s => ({
+      name: s.getName(),
+      parameters: s.getParameters().map((s) => {
+        return {
+          name: s.getName(),
+          type: getType(s.getType()),
+          initializer: s.getInitializer()?.getText(),
+        }
+      }),
+      returnType: getType(s.getReturnType()),
+    })),
+    constructSignatures: d.getConstructSignatures().map(s => ({
+      parameters: s.getParameters().map((s) => {
+        return {
+          name: s.getName(),
+          type: getType(s.getType()),
+          initializer: s.getInitializer()?.getText(),
+          scope: s.getScope(),
+          hasOverrideKeyword: s.hasOverrideKeyword(),
+          isReadonly: s.isReadonly(),
+        }
+      }),
+      returnType: getType(s.getReturnType()),
+    })),
+    properties: d.getProperties().map(s => ({
+      name: s.getName(),
+      type: getType(s.getType()),
+    })),
+  })
+}
+
+export function insertTypeAliasDeclaration(index: number, declarartion: TypeAliasDeclaration, source: SourceFile) {
+  const d = declarartion as TypeAliasDeclaration
+  source.insertTypeAlias(index, {
+    name: d.getName(),
+    type: getType(d.getType()),
+  })
+}
+
+export function getDeclaration(name: string, source: SourceFile) {
+  return source.getVariableDeclaration(name)
+    ?? source.getFunction(name)
+    ?? source.getClass(name)
+    ?? source.getInterface(name)
+    ?? source.getEnum(name)
+    ?? source.getVariableDeclaration(name)
 }

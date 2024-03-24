@@ -1,6 +1,6 @@
-import type { ClassDeclaration, EnumDeclaration, FunctionDeclaration, VariableDeclaration } from 'ts-morph'
+import type { ClassDeclaration, EnumDeclaration, FunctionDeclaration, InterfaceDeclaration, TypeAliasDeclaration, VariableDeclaration } from 'ts-morph'
 import { describe, expect, it } from 'vitest'
-import { insertClassDeclaration, insertEnumDeclaration, insertFunctionDeclaration, insertVariableDeclaration } from '../src/declaration'
+import { insertClassDeclaration, insertEnumDeclaration, insertFunctionDeclaration, insertInterfaceDeclaration, insertTypeAliasDeclaration, insertVariableDeclaration } from '../src/declaration'
 import { getInfoFromText } from './helper/getInfoFromText'
 
 describe('declaration', () => {
@@ -130,6 +130,83 @@ export class a {}`,
 
 export class a {}`,
       )
+    })
+  })
+  describe('insertInterfaceDeclaration', () => {
+    function doTest(startCode: string, declarartion: InterfaceDeclaration, expected: string) {
+      const { sourceFile } = getInfoFromText(startCode)
+      insertInterfaceDeclaration(0, declarartion, sourceFile)
+      expect(sourceFile.getFullText()).toMatch(expected)
+    }
+    it('should insert interface declaration at the beginning of the file', () => {
+      const { sourceFile } = getInfoFromText('export interface b {}')
+      doTest('export interface a {}', sourceFile.getInterface('b')!, `interface b {
+}
+
+export interface a {}`)
+    })
+
+    it('should insert interface declaration with extends at the end of the file', () => {
+      const { sourceFile } = getInfoFromText('export interface b extends a {}')
+      doTest('export interface a {}', sourceFile.getInterface('b')!, `interface b extends a {
+}
+
+export interface a {}`)
+    })
+
+    it('should insert interface declaration with properties at the end of the file', () => {
+      const { sourceFile } = getInfoFromText('export interface b {a: number} export interface a {}')
+      doTest('export interface a {}', sourceFile.getInterface('b')!, `interface b {
+    a: number;
+}
+
+export interface a {}`)
+    })
+    it('should insert interface declaration with ctors at the end of the file', () => {
+      const { sourceFile } = getInfoFromText(`export interface b {
+        constructor(a = 1): void
+      }`)
+      doTest('export interface a {}', sourceFile.getInterface('b')!, `interface b {
+    constructor(a: number = 1): void;
+}
+
+export interface a {}`)
+    })
+    it('should insert interface declaration with methods at the end of the file', () => {
+      const { sourceFile } = getInfoFromText(`export interface b {
+        a(): void
+      }`)
+      doTest('export interface a {}', sourceFile.getInterface('b')!, `interface b {
+    a(): void;
+}
+
+export interface a {}`)
+    })
+    it('should insert interface declaration with methods and properties at the end of the file', () => {
+      const { sourceFile } = getInfoFromText(`export interface b {
+        a(): void
+        b: number;
+        c: string
+      }`)
+      doTest('export interface a {}', sourceFile.getInterface('b')!, `interface b {
+    b: number;
+    c: string;
+    a(): void;
+}
+
+export interface a {}`)
+    })
+  })
+  describe('insertTypeAliasDeclaration', () => {
+    function doTest(startCode: string, declarartion: TypeAliasDeclaration, expected: string) {
+      const { sourceFile } = getInfoFromText(startCode)
+      insertTypeAliasDeclaration(0, declarartion, sourceFile)
+      expect(sourceFile.getFullText()).toMatch(expected)
+    }
+    it('should insert type alias declaration at the beginning of the file', () => {
+      const { sourceFile } = getInfoFromText('export type b = a')
+      doTest('export type a = b', sourceFile.getTypeAlias('b')!, `type b = a;
+export type a = b`)
     })
   })
 })

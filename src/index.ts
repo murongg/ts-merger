@@ -1,7 +1,7 @@
 import path from 'node:path'
-import type { ClassDeclaration, EnumDeclaration, FunctionDeclaration, SourceFile, VariableDeclaration } from 'ts-morph'
+import type { ClassDeclaration, EnumDeclaration, FunctionDeclaration, VariableDeclaration } from 'ts-morph'
 import { Project, SyntaxKind } from 'ts-morph'
-import { insertClassDeclaration, insertEnumDeclaration, insertFunctionDeclaration, insertVariableDeclaration } from './declaration'
+import { getDeclaration, insertClassDeclaration, insertEnumDeclaration, insertFunctionDeclaration, insertVariableDeclaration } from './declaration'
 const project = new Project()
 
 const entryPath = path.join(__dirname, 'tests/index.ts')
@@ -33,11 +33,4 @@ for (const i of sourceFile.getImportDeclarations()) {
 }
 
 // console.log(sourceFile.getFullText())
-function getDeclaration(name: string, source: SourceFile) {
-  return source.getVariableDeclaration(name)
-    ?? source.getFunction(name)
-    ?? source.getClass(name)
-    ?? source.getInterface(name)
-    ?? source.getEnum(name)
-    ?? source.getVariableDeclaration(name)
-}
+
